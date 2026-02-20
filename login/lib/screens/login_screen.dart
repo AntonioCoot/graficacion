@@ -9,106 +9,92 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // Variables de control de estado
   bool _obscureText = true;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
-  // crear el cerebro de la animacion
+  // Variables para Rive (Asegúrate de que estén declaradas AQUÍ)
   StateMachineController? _controller;
-  //SMI: State Machine Input
   SMIBool? _isChecking;
   SMIBool? _isHandsUp;
   SMITrigger? _trigSuccess;
   SMITrigger? _trigFail;
 
-  //1.1) Crear variables para FocusNode
-  final _emailFocusNode = FocusNode();
-  final _passwordFocusNode = FocusNode();
-
-  //1.2) Listener para FocusNode(Oyentes/chismosos)
   @override
-  void initState() {
-    super.initState();
-    _emailFocusNode.addListener(() {
-      if (_emailFocusNode.hasFocus) {
-        //verifica que sea nulo
-        if (_isHandsUp != null) {
-          // manos abajo en el email
-          _isHandsUp!.change(false);
-        }
-      }
-    });
-    _passwordFocusNode.addListener(() {
-      //manos arriba en password
-      if (_isHandsUp != null) {
-        _isHandsUp!.change(_passwordFocusNode.hasFocus);
-      }
-    });
+  void dispose() {
+    _controller?.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  // Método para manejar el login y usar los triggers (Soluciona "Undefined name")
+  void _onLoginPressed() {
+    _isHandsUp?.change(false);
+    _isChecking?.change(false);
+
+    // Validación simple para probar las animaciones
+    if (_emailController.text == "admin@gmail.com" && _passwordController.text == "123456") {
+      _trigSuccess?.fire();
+    } else {
+      _trigFail?.fire();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
-
     return Scaffold(
-      //Evita que se quite espacio del nudge
+      // Se eliminó el '#' del color para evitar el error de 'Symbol/int'
+      backgroundColor: const Color(0xFFD6E2EA), 
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
           child: Column(
             children: [
+              // Animación de Rive
               SizedBox(
-                width: size.width,
-                height: 200,
+                height: 250,
                 child: RiveAnimation.asset(
-                  'assets/animated_login_bear.riv',
+                  'assets/Animated_login_bear.riv',
                   stateMachines: const ['Login Machine'],
-                  //Al iniciar la animacion
                   onInit: (artboard) {
-                    _controller = StateMachineController.fromArtboard(
-                      artboard,
-                      'Login Machine',
-                    );
-
-                    //verifica que inicio bien
-                    if (_controller == null) return;
-                    // agrega el controlador al tablero/escenario
-                    artboard.addController(_controller!);
-                    _isChecking = _controller!.findSMI('isChecking') as SMIBool?;
-                    _isHandsUp = _controller!.findSMI('isHandsUp') as SMIBool?;
-                    _trigSuccess = _controller!.findSMI('trigSuccess') as SMITrigger?;
-                    _trigFail = _controller!.findSMI('trigFail') as SMITrigger?;
+                    _controller = StateMachineController.fromArtboard(artboard, 'Login Machine');
+                    if (_controller != null) {
+                      artboard.addController(_controller!);
+                      _isChecking = _controller!.findSMI('isChecking');
+                      _isHandsUp = _controller!.findSMI('isHandsUp');
+                      _trigSuccess = _controller!.findSMI('trigSuccess');
+                      _trigFail = _controller!.findSMI('trigFail');
+                    }
                   },
-                  fit: BoxFit.contain,
                 ),
               ),
-              const SizedBox(height: 24),
-              TextField(
-                //1.3 Asignar FocusNode al Textfield
-                focusNode: _emailFocusNode,
-                onChanged: (value) {
-                  if (_isHandsUp != null) {
-                    //No tapes los ojos al ver email
-                    //_isHandsUp!.change(false);
-                  
-                  }
-                  //Si isChecking no es nulo
-                  if (_isChecking == null) return;
-                  // activar el modo chismoso
-                  _isChecking!.change(true);
 
+              const SizedBox(height: 20),
+
+              // Campo Email
+              TextField(
+                controller: _emailController,
+                onChanged: (value) {
+                  _isHandsUp?.change(false);
+                  _isChecking?.change(value.isNotEmpty);
                 },
                 decoration: InputDecoration(
                   hintText: 'Email',
                   prefixIcon: const Icon(Icons.email),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
+
               const SizedBox(height: 12),
+
+              // Campo Password (LÓGICA DE TU IMAGEN INCORPORADA)
               TextField(
-                focusNode: _passwordFocusNode,
+                controller: _passwordController,
                 obscureText: _obscureText,
                 onChanged: (value) {
+                  // Tu código: Deja de mirar y levanta las manos
                   if (_isChecking != null) {
                     _isChecking!.change(false);
                   }
@@ -120,31 +106,28 @@ class _LoginScreenState extends State<LoginScreen> {
                   hintText: 'Password',
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureText ? Icons.visibility : Icons.visibility_off,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureText = !_obscureText;
-                      });
-                    },
+                    icon: Icon(_obscureText ? Icons.visibility : Icons.visibility_off),
+                    onPressed: () => setState(() => _obscureText = !_obscureText),
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
-              const SizedBox(height: 16),
+
+              const SizedBox(height: 24),
+
+              // Botón Login
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _onLoginPressed,
+                  child: const Text('Ingresar'),
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
-  }
-  @override
-  void dispose() {
-    _emailFocusNode.dispose();
-    _passwordFocusNode.dispose();
-    super.dispose();
   }
 }
