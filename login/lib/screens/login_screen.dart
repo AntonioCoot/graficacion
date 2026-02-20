@@ -38,7 +38,9 @@ class _LoginScreenState extends State<LoginScreen> {
     });
     _passwordFocusNode.addListener(() {
       //manos arriba en password
-      _isHandsUp!.change(_passwordFocusNode.hasFocus);
+      if (_isHandsUp != null) {
+        _isHandsUp!.change(_passwordFocusNode.hasFocus);
+      }
     });
   }
 
@@ -104,6 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 12),
               TextField(
+                focusNode: _passwordFocusNode,
                 obscureText: _obscureText,
                 onChanged: (value) {
                   if (_isChecking != null) {
@@ -138,9 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
-//1.4 Liberar memoria/recursos al salir de la pantalla
-@override
+  @override
   void dispose() {
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
